@@ -110,28 +110,28 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-// Validate ../../app/api/agent-network/route.ts
+// Validate ../../app/api_backup/agent-network/route.ts
 {
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/agent-network">> = Specific
-  const handler = {} as typeof import("../../app/api/agent-network/route.js")
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api_backup/agent-network">> = Specific
+  const handler = {} as typeof import("../../app/api_backup/agent-network/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
 }
 
-// Validate ../../app/api/generate-network/route.ts
+// Validate ../../app/api_backup/generate-network/route.ts
 {
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/generate-network">> = Specific
-  const handler = {} as typeof import("../../app/api/generate-network/route.js")
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api_backup/generate-network">> = Specific
+  const handler = {} as typeof import("../../app/api_backup/generate-network/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
 }
 
-// Validate ../../app/api/model-test/route.ts
+// Validate ../../app/api_backup/model-test/route.ts
 {
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/model-test">> = Specific
-  const handler = {} as typeof import("../../app/api/model-test/route.js")
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api_backup/model-test">> = Specific
+  const handler = {} as typeof import("../../app/api_backup/model-test/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

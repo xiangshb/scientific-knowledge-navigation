@@ -6,8 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // 改为标准部署以支持 API 路由
-  // output: 'export', // 注释掉静态导出
+  // 启用静态导出以支持 GitHub Pages 部署
+  output: 'export',
   trailingSlash: true,
   distDir: 'out',
   assetPrefix: process.env.NODE_ENV === 'production' ? '/scientific-knowledge-navigation' : '',
