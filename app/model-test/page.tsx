@@ -126,15 +126,94 @@ export default function ModelTestPage() {
         newLogs.push(`[${new Date().toLocaleTimeString()}] Calling streaming API with model: ${currentModel.name}`)
         setLogs([...newLogs])
 
-        // 静态导出环境下，只使用模拟响应
-        const useRealAPI = false; // 静态导出禁用真实API
-        const apiUrl = null; // 不使用API端点
+        // 检测是否有真实的API配置
+        const useRealAPI = currentModel.apiKey && currentModel.apiKey.trim() !== "" &&
+                         currentModel.connectionURL && currentModel.connectionURL.trim() !== "";
         
-        newLogs.push(`[${new Date().toLocaleTimeString()}] Using mock response for static export`);
-        setLogs([...newLogs]);
+        if (useRealAPI) {
+          newLogs.push(`[${new Date().toLocaleTimeString()}] Using real API: /api/model-test`);
+          setLogs([...newLogs]);
 
-        // 静态导出环境下使用模拟响应
-        const mockResponse = `中国有四个直辖市，分别是：
+          // 调用真实API
+          const apiResponse = await fetch("/api/model-test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: input,
+              config: {
+                apiKey: currentModel.apiKey,
+                baseURL: currentModel.baseURL,
+                model: currentModel.model,
+                connectionURL: (currentModel as any).connectionURL,
+              },
+            }),
+          })
+
+          if (!apiResponse.ok) {
+            const errorText = await apiResponse.text()
+            throw new Error(errorText || `HTTP ${apiResponse.status}`)
+          }
+
+          if (!apiResponse.body) throw new Error("No response body")
+          
+          const reader = apiResponse.body.getReader()
+          const decoder = new TextDecoder()
+          let done = false
+          let streamedText = ""
+          let buffer = ""
+          
+          newLogs.push(`[${new Date().toLocaleTimeString()}] Stream started`)
+          setLogs([...newLogs])
+          
+          while (!done) {
+            const { value, done: doneReading } = await reader.read()
+            done = doneReading
+            if (value) {
+              const chunk = decoder.decode(value, { stream: true })
+              buffer += chunk
+              
+              // 处理SSE格式的数据
+              const lines = buffer.split('\n')
+              buffer = lines.pop() || '' // 保留最后一个不完整的行
+              
+              for (const line of lines) {
+                if (line.trim() === '' || !line.startsWith('data: ')) continue
+                
+                try {
+                  const jsonStr = line.slice(6).trim()
+                  if (jsonStr === '') continue
+                  
+                  const data = JSON.parse(jsonStr)
+                  if (data.done) {
+                    done = true
+                    break
+                  } else if (data.content) {
+                    // 累积内容，提供自然的段落阅读体验
+                    streamedText += data.content
+                    setRawOutput(streamedText)
+                  }
+                } catch (e) {
+                  // 忽略无法解析的行
+                }
+              }
+            }
+          }
+
+          newLogs.push(`[${new Date().toLocaleTimeString()}] Real API stream complete`)
+          setLogs([...newLogs])
+
+          setResponse({
+            rawContent: JSON.stringify({
+              object: "chat.completion",
+              choices: [{ message: { content: streamedText } }],
+            }),
+          })
+        } else {
+          newLogs.push(`[${new Date().toLocaleTimeString()}] Using mock response (no API config)`);
+          setLogs([...newLogs]);
+
+          // 静态导出环境下使用模拟响应
+          const mockResponse = `中国有四个直辖市，分别是：
 
 1. **北京市**
    - 中国首都，政治、文化中心
@@ -158,30 +237,31 @@ export default function ModelTestPage() {
 
 这四个直辖市在行政级别上与省相同，直接受中央政府管辖。`;
 
-        // 模拟流式响应效果
-        let streamedText = "";
-        const words = mockResponse.split("");
-        let wordIndex = 0;
-        
-        const streamInterval = setInterval(() => {
-          if (wordIndex < words.length) {
-            streamedText += words[wordIndex];
-            setRawOutput(streamedText);
-            wordIndex++;
-          } else {
-            clearInterval(streamInterval);
-            
-            newLogs.push(`[${new Date().toLocaleTimeString()}] Mock stream complete`);
-            setLogs([...newLogs]);
+          // 模拟流式响应效果
+          let streamedText = "";
+          const words = mockResponse.split("");
+          let wordIndex = 0;
+          
+          const streamInterval = setInterval(() => {
+            if (wordIndex < words.length) {
+              streamedText += words[wordIndex];
+              setRawOutput(streamedText);
+              wordIndex++;
+            } else {
+              clearInterval(streamInterval);
+              
+              newLogs.push(`[${new Date().toLocaleTimeString()}] Mock stream complete`);
+              setLogs([...newLogs]);
 
-            setResponse({
-              rawContent: JSON.stringify({
-                object: "chat.completion",
-                choices: [{ message: { content: streamedText } }],
-              }),
-            });
-          }
-        }, 50); // 每50ms添加一个字符，模拟流式效果
+              setResponse({
+                rawContent: JSON.stringify({
+                  object: "chat.completion",
+                  choices: [{ message: { content: streamedText } }],
+                }),
+              });
+            }
+          }, 50); // 每50ms添加一个字符，模拟流式效果
+        }
       } else {
         newLogs.push(
           `[${new Date().toLocaleTimeString()}] Calling standard API (Non-stream) with model: ${currentModel.name}`,

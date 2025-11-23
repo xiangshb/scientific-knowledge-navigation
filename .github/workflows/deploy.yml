@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Next.js to GitHub Pages
 
 on:
   push:
@@ -11,6 +11,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  deployments: write
 
 jobs:
   build-and-deploy:
@@ -29,11 +30,13 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build
+    - name: Build with API routes
       run: npm run build
       env:
         NODE_ENV: production
         NEXT_TELEMETRY_DISABLED: 1
+        # 添加环境变量支持
+        NEXT_PUBLIC_SITE_URL: https://xiangshb.github.io/scientific-knowledge-navigation
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
