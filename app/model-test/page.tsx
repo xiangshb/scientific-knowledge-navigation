@@ -126,88 +126,62 @@ export default function ModelTestPage() {
         newLogs.push(`[${new Date().toLocaleTimeString()}] Calling streaming API with model: ${currentModel.name}`)
         setLogs([...newLogs])
 
-        // 根据是否有真实API密钥决定使用哪个端点
-        const useRealAPI = currentModel.apiKey && currentModel.apiKey.trim() !== "" &&
-                         currentModel.connectionURL && currentModel.connectionURL.trim() !== "";
+        // 静态导出环境下，只使用模拟响应
+        const useRealAPI = false; // 静态导出禁用真实API
+        const apiUrl = null; // 不使用API端点
         
-        const apiUrl = useRealAPI ? "/api/stream-model" : "/api/mock-stream";
-        
-        newLogs.push(`[${new Date().toLocaleTimeString()}] Using ${useRealAPI ? 'real' : 'mock'} API: ${apiUrl}`);
+        newLogs.push(`[${new Date().toLocaleTimeString()}] Using mock response for static export`);
         setLogs([...newLogs]);
 
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: input,
-            config: {
-              apiKey: currentModel.apiKey,
-              baseURL: currentModel.baseURL,
-              model: currentModel.model,
-              connectionURL: (currentModel as any).connectionURL,
-            },
-          }),
-        })
+        // 静态导出环境下使用模拟响应
+        const mockResponse = `中国有四个直辖市，分别是：
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(errorText || `HTTP ${response.status}`)
-        }
+1. **北京市**
+   - 中国首都，政治、文化中心
+   - 拥有故宫、天安门、长城等著名景点
+   - 经济发达，科技创新能力强
 
-        if (!response.body) throw new Error("No response body")
+2. **上海市**
+   - 经济金融中心，国际化大都市
+   - 外滩、东方明珠等标志性建筑
+   - 贸易港口重要，商业繁荣
+
+3. **天津市**
+   - 北方重要港口城市
+   - 近代工业发源地之一
+   - 滨海新区是国家级开发区
+
+4. **重庆市**
+   - 西部直辖市，山城地貌
+   - 长江上游重要城市
+   - 火锅文化闻名，制造业发达
+
+这四个直辖市在行政级别上与省相同，直接受中央政府管辖。`;
+
+        // 模拟流式响应效果
+        let streamedText = "";
+        const words = mockResponse.split("");
+        let wordIndex = 0;
         
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let done = false
-        let streamedText = ""
-        let buffer = ""
-        
-        newLogs.push(`[${new Date().toLocaleTimeString()}] Stream started`)
-        setLogs([...newLogs])
-        
-        while (!done) {
-          const { value, done: doneReading } = await reader.read()
-          done = doneReading
-          if (value) {
-            const chunk = decoder.decode(value, { stream: true })
-            buffer += chunk
+        const streamInterval = setInterval(() => {
+          if (wordIndex < words.length) {
+            streamedText += words[wordIndex];
+            setRawOutput(streamedText);
+            wordIndex++;
+          } else {
+            clearInterval(streamInterval);
             
-            // 处理SSE格式的数据
-            const lines = buffer.split('\n')
-            buffer = lines.pop() || '' // 保留最后一个不完整的行
-            
-            for (const line of lines) {
-              if (line.trim() === '' || !line.startsWith('data: ')) continue
-              
-              try {
-                const jsonStr = line.slice(6).trim()
-                if (jsonStr === '') continue
-                
-                const data = JSON.parse(jsonStr)
-                if (data.done) {
-                  done = true
-                  break
-                } else if (data.content) {
-                  // 累积内容，提供自然的段落阅读体验
-                  streamedText += data.content
-                  setRawOutput(streamedText)
-                }
-              } catch (e) {
-                // 忽略无法解析的行
-              }
-            }
+            newLogs.push(`[${new Date().toLocaleTimeString()}] Mock stream complete`);
+            setLogs([...newLogs]);
+
+            setResponse({
+              rawContent: JSON.stringify({
+                object: "chat.completion",
+                choices: [{ message: { content: streamedText } }],
+              }),
+            });
           }
-        }
-
-        newLogs.push(`[${new Date().toLocaleTimeString()}] Stream complete`)
-        setLogs([...newLogs])
-
-        setResponse({
-          rawContent: JSON.stringify({
-            object: "chat.completion",
-            choices: [{ message: { content: streamedText } }],
-          }),
-        })
+        }, 50); // 每50ms添加一个字符，模拟流式效果
       } else {
         newLogs.push(
           `[${new Date().toLocaleTimeString()}] Calling standard API (Non-stream) with model: ${currentModel.name}`,
