@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/agents/page": "app/agents/page.js",
+  "/analytics/page": "app/analytics/page.js",
+  "/knowledge-network/page": "app/knowledge-network/page.js",
+  "/model-test/page": "app/model-test/page.js",
+  "/page": "app/page.js",
+  "/research/page": "app/research/page.js",
+  "/tools/page": "app/tools/page.js"
+}
