@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# Set permissions for the deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -27,6 +33,7 @@ jobs:
       run: npm run build
       env:
         NODE_ENV: production
+        NEXT_TELEMETRY_DISABLED: 1
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
