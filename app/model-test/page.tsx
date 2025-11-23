@@ -41,6 +41,7 @@ export default function ModelTestPage() {
   const [isEditingConfig, setIsEditingConfig] = useState(false)
   const [showApiKey, setShowApiKey] = useState(false)
   const [useStream, setUseStream] = useState(true) // Add state for stream toggle
+  const [hasInteracted, setHasInteracted] = useState(false) // Track if user has made a test request
 
   const [availableModels, setAvailableModels] = useState(PRESET_MODELS)
   const [selectedModelId, setSelectedModelId] = useState(PRESET_MODELS[0].id)
@@ -112,6 +113,7 @@ export default function ModelTestPage() {
     setResponse(null)
     setLogs([]) // Clear previous logs for a fresh run
     setRawOutput("")
+    setHasInteracted(true) // Mark that user has made a request
     // Don't force switch tab, let user stay where they are, or default to response if empty
     if (!activeTab) setActiveTab("response")
 
@@ -124,7 +126,16 @@ export default function ModelTestPage() {
         newLogs.push(`[${new Date().toLocaleTimeString()}] Calling streaming API with model: ${currentModel.name}`)
         setLogs([...newLogs])
 
-        const response = await fetch("/api/stream-model", {
+        // 根据是否有真实API密钥决定使用哪个端点
+        const useRealAPI = currentModel.apiKey && currentModel.apiKey.trim() !== "" &&
+                         currentModel.connectionURL && currentModel.connectionURL.trim() !== "";
+        
+        const apiUrl = useRealAPI ? "/api/stream-model" : "/api/mock-stream";
+        
+        newLogs.push(`[${new Date().toLocaleTimeString()}] Using ${useRealAPI ? 'real' : 'mock'} API: ${apiUrl}`);
+        setLogs([...newLogs]);
+
+        const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -144,22 +155,47 @@ export default function ModelTestPage() {
         }
 
         if (!response.body) throw new Error("No response body")
-
+        
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
         let done = false
         let streamedText = ""
-
+        let buffer = ""
+        
         newLogs.push(`[${new Date().toLocaleTimeString()}] Stream started`)
         setLogs([...newLogs])
-
+        
         while (!done) {
           const { value, done: doneReading } = await reader.read()
           done = doneReading
           if (value) {
             const chunk = decoder.decode(value, { stream: true })
-            streamedText += chunk
-            setRawOutput((prev) => prev + chunk)
+            buffer += chunk
+            
+            // 处理SSE格式的数据
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || '' // 保留最后一个不完整的行
+            
+            for (const line of lines) {
+              if (line.trim() === '' || !line.startsWith('data: ')) continue
+              
+              try {
+                const jsonStr = line.slice(6).trim()
+                if (jsonStr === '') continue
+                
+                const data = JSON.parse(jsonStr)
+                if (data.done) {
+                  done = true
+                  break
+                } else if (data.content) {
+                  // 累积内容，提供自然的段落阅读体验
+                  streamedText += data.content
+                  setRawOutput(streamedText)
+                }
+              } catch (e) {
+                // 忽略无法解析的行
+              }
+            }
           }
         }
 
@@ -220,6 +256,61 @@ export default function ModelTestPage() {
             <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">v2.0</span>
           </h1>
         </div>
+        
+        {/* Centered Tab Navigation */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
+          <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex gap-1 items-center">
+            <div className="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm mr-2">
+              <Switch
+                id="stream-mode"
+                checked={useStream}
+                onCheckedChange={setUseStream}
+                className="data-[state=checked]:bg-emerald-500"
+              />
+              <Label
+                htmlFor="stream-mode"
+                className="text-xs font-medium text-slate-600 flex items-center gap-1 cursor-pointer"
+              >
+                <Zap className={`w-3 h-3 ${useStream ? "text-emerald-500 fill-emerald-500" : "text-slate-400"}`} />
+                Stream
+              </Label>
+            </div>
+            <button
+              onClick={() => setActiveTab("response")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === "response"
+                  ? "bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-200"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              Response
+            </button>
+            <button
+              onClick={() => setActiveTab("json")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === "json"
+                  ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-200"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <FileJson className="w-4 h-4" />
+              Raw JSON
+            </button>
+            <button
+              onClick={() => setActiveTab("logs")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === "logs"
+                  ? "bg-amber-50 text-amber-700 shadow-sm ring-1 ring-amber-200"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <Terminal className="w-4 h-4" />
+              System Logs
+            </button>
+          </div>
+        </div>
+
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
             <span className="text-xs font-medium text-slate-500 px-2">Active:</span>
@@ -391,62 +482,6 @@ export default function ModelTestPage() {
       <main className="flex-1 flex flex-col min-h-0 relative">
         {/* Output Area (Takes up all available space above input) */}
         <div className="flex-1 flex flex-col bg-slate-50 min-h-0">
-          {/* Output Tabs */}
-          <div className="flex-none px-6 pt-4 pb-2 flex justify-center items-center relative">
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <div className="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                <Switch
-                  id="stream-mode"
-                  checked={useStream}
-                  onCheckedChange={setUseStream}
-                  className="data-[state=checked]:bg-emerald-500"
-                />
-                <Label
-                  htmlFor="stream-mode"
-                  className="text-xs font-medium text-slate-600 flex items-center gap-1 cursor-pointer"
-                >
-                  <Zap className={`w-3 h-3 ${useStream ? "text-emerald-500 fill-emerald-500" : "text-slate-400"}`} />
-                  Stream
-                </Label>
-              </div>
-            </div>
-
-            <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex gap-1">
-              <button
-                onClick={() => setActiveTab("response")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  activeTab === "response"
-                    ? "bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-200"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <MessageSquare className="w-4 h-4" />
-                Response
-              </button>
-              <button
-                onClick={() => setActiveTab("json")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  activeTab === "json"
-                    ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-200"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <FileJson className="w-4 h-4" />
-                Raw JSON
-              </button>
-              <button
-                onClick={() => setActiveTab("logs")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  activeTab === "logs"
-                    ? "bg-amber-50 text-amber-700 shadow-sm ring-1 ring-amber-200"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <Terminal className="w-4 h-4" />
-                System Logs
-              </button>
-            </div>
-          </div>
 
           {/* Content Viewport */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-20 pb-6 custom-scrollbar">
@@ -471,7 +506,9 @@ export default function ModelTestPage() {
               )}
 
               {/* Tab Content */}
-              {(rawOutput || logs.length > 0) && (
+              {/* Show tab content only when there's actual content to display */}
+              {/* Never show empty output box while waiting for initial response */}
+              {(rawOutput || logs.length > 0) ? (
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm min-h-[200px] overflow-hidden">
                   {/* RESPONSE TAB */}
                   {activeTab === "response" && (
@@ -483,9 +520,11 @@ export default function ModelTestPage() {
                           </pre>
                         </div>
                       ) : (
-                        <div className="text-slate-400 italic text-center py-10">
-                          No response content available yet.
-                        </div>
+                        !loading && !useStream && (
+                          <div className="text-slate-400 italic text-center py-10">
+                            No response content available yet.
+                          </div>
+                        )
                       )}
                     </div>
                   )}
@@ -520,7 +559,7 @@ export default function ModelTestPage() {
                     </div>
                   )}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

@@ -8,7 +8,7 @@ export const MODEL_CONFIG = {
 export const PRESET_MODELS = [
   {
     id: "doubao-pro",
-    name: "Doubao Pro (Seed 1.6 Lite)",
+    name: "Doubao Seed 1.6 Lite",
     baseURL: "https://ark.cn-beijing.volces.com/api/v3",
     connectionURL: "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
     apiKey: "2ee34654-7f98-46bc-b879-6ed4fb57eddf",
@@ -24,4 +24,13 @@ export const PRESET_MODELS = [
     model: "MiniMax-M2-Stable",
     provider: "minimax",
   },
+  {
+    id: "ChatGLM",
+    name: "ChatGLM-4.6",
+    baseURL: "https://open.bigmodel.cn/api/coding/paas/v4",
+    connectionURL: "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions",
+    apiKey: MODEL_CONFIG.apiKey,
+    model: "glm-4.6",
+    provider: "ChatGLM",
+  }
 ]
