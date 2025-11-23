@@ -94,7 +94,8 @@ npm run dev
 ```
 
 4. 访问应用
-打开浏览器访问: http://localhost:3000
+- **本地开发**: 打开浏览器访问 http://localhost:3000
+- **GitHub Pages**: 访问 https://xiangshb.github.io/scientific-knowledge-navigation/
 
 ## 🧪 测试
 
@@ -105,10 +106,11 @@ node simple-test.js
 ```
 
 ### 手动测试
-1. 访问 http://localhost:3000/model-test
-2. 配置AI模型（或使用模拟API）
-3. 输入测试文本进行模型测试
-4. 观察流式响应效果
+1. **本地开发**: 访问 http://localhost:3000/model-test
+2. **GitHub Pages**: 访问 https://xiangshb.github.io/scientific-knowledge-navigation/model-test
+3. 配置AI模型（或使用模拟API）
+4. 输入测试文本进行模型测试
+5. 观察流式响应效果
 
 ## 📖 使用指南
 
@@ -119,13 +121,16 @@ node simple-test.js
 - 保存配置
 
 ### 2. 测试AI模型 (Model Test Console)
-- 访问 http://localhost:3000/model-test
+- **本地开发**: 访问 http://localhost:3000/model-test
+- **GitHub Pages**: 访问 https://xiangshb.github.io/scientific-knowledge-navigation/model-test
 - 在文本框中输入任何测试文本（如"你好"、"你是谁"等）
 - 选择流式或非流式响应模式
 - 点击发送按钮观察AI模型的实时响应
 - 查看系统日志了解详细的API调用过程
 
 ### 3. 生成知识网络
+- **本地开发**: 访问 http://localhost:3000/knowledge-network
+- **GitHub Pages**: 访问 https://xiangshb.github.io/scientific-knowledge-navigation/knowledge-network
 - 在知识网络页面输入主题或问题
 - 点击发送按钮
 - 观察实时生成的知识网络
