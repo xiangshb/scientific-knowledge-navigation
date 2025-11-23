@@ -1,4 +1,3 @@
-// Mock server action for static export compatibility
 export async function generateNetworkFromText(options: {
   text: string,
   modelId: string,
@@ -34,4 +33,3 @@ export async function generateNetworkFromText(options: {
     sessionId: mockNetworkData.metadata.sessionId,
     message: '知识网络生成完成'
   }
-}
