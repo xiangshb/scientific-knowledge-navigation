@@ -21,11 +21,9 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      working-directory: ./scientific-knowledge-navigation
       run: npm ci
       
     - name: Build
-      working-directory: ./scientific-knowledge-navigation
       run: npm run build
       env:
         NODE_ENV: production
@@ -36,7 +34,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ./scientific-knowledge-navigation/out
+        path: ./out
         
     - name: Deploy to GitHub Pages
       id: deployment
