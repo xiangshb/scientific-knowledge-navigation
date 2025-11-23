@@ -55,7 +55,7 @@ cd scientific-knowledge-navigation && git add . && git commit -m "你的提交�
    git commit -m "你的提交信息"
    git push origin main
    ```
-
+ ，
 ### 方式 3：使用 VS Code GitLens 扩展
 
 1. **安装 GitLens 扩展**

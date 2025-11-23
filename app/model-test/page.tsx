@@ -25,7 +25,7 @@ import {
 import Link from "next/link"
 import { PRESET_MODELS } from "@/lib/model-config"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { testModelConnection } from "@/actions/test-model" // Import server action for non-streaming test
+// import { testModelConnection } from "@/actions/test-model" // Server action removed for static export
 import { Switch } from "@/components/ui/switch" // Import Switch component
 
 const addLog = (log: string) => {
@@ -214,22 +214,8 @@ export default function ModelTestPage() {
         )
         setLogs([...newLogs])
 
-        const result = await testModelConnection(input, {
-          apiKey: currentModel.apiKey,
-          baseURL: currentModel.baseURL,
-          model: currentModel.model,
-          connectionURL: (currentModel as any).connectionURL,
-        })
-
-        if (!result.success) {
-          throw new Error(result.raw)
-        }
-
-        setRawOutput(result.content)
-        setResponse({ rawContent: result.raw })
-
-        newLogs.push(`[${new Date().toLocaleTimeString()}] Request complete`)
-        setLogs([...newLogs])
+        // Non-streaming mode disabled for static export
+        throw new Error("Non-streaming mode is not supported in static export. Please use streaming mode.")
       }
     } catch (error) {
       newLogs.push(`[${new Date().toLocaleTimeString()}] Error: ${error}`)

@@ -1,20 +1,4 @@
 {
-  "node": {
-    "60b6dd4c84f6b96468884b465551909d907735b1db": {
-      "workers": {
-        "app/model-test/page": {
-          "moduleId": 38488,
-          "async": false,
-          "exportedName": "testModelConnection",
-          "filename": "actions/test-model.ts"
-        }
-      },
-      "layer": {
-        "app/model-test/page": "action-browser"
-      },
-      "exportedName": "testModelConnection",
-      "filename": "actions/test-model.ts"
-    }
-  },
+  "node": {},
   "edge": {}
 }
