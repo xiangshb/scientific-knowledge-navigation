@@ -4,6 +4,7 @@
   "/agents/page": "app/agents/page.js",
   "/analytics/page": "app/analytics/page.js",
   "/api/agent-network/route": "app/api/agent-network/route.js",
+  "/api/generate-network/route": "app/api/generate-network/route.js",
   "/api/model-test/route": "app/api/model-test/route.js",
   "/knowledge-network/page": "app/knowledge-network/page.js",
   "/model-test/page": "app/model-test/page.js",

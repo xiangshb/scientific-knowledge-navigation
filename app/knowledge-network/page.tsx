@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ModelConfigPanel } from "@/components/knowledge-network/model-config-panel"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PRESET_MODELS } from "@/lib/model-config"
-import { generateNetworkFromText } from "@/actions/generate-network"
+import { generateNetworkFromText } from "../actions/generate-network"
 import Link from "next/link"
 
 interface GenerationProgress {

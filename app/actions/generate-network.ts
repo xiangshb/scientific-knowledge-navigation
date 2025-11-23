@@ -23,7 +23,7 @@ export async function generateNetworkFromText(options: {
       timestamp: new Date().toISOString(),
       totalNodes: 3,
       totalLinks: 3,
-      modelId,
+      modelId: options.modelId,
     }
   }
 
@@ -33,3 +33,4 @@ export async function generateNetworkFromText(options: {
     sessionId: mockNetworkData.metadata.sessionId,
     message: '知识网络生成完成'
   }
+}
